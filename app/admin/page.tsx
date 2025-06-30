@@ -39,9 +39,9 @@ export default function Admin() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-center">Admin Panel</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-black text-white">
+      <div className="w-full max-w-md p-8 space-y-6 bg-gray-900 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold text-center">Upload Image Here</h1>
         <form onSubmit={onSubmit} className="flex flex-col gap-6">
           <div className="flex items-center justify-center w-full">
             {preview ? (

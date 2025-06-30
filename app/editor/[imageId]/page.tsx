@@ -146,7 +146,7 @@ export default function MemeEditor() {
         return el;
       })
     );
-  };
+  };  
 
   const handleMouseUp = () => {
     setDraggedElementId(null);
@@ -209,7 +209,7 @@ export default function MemeEditor() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 bg-gray-900 text-white">
+    <main className="flex min-h-screen flex-col items-center p-8 bg-black text-white">
       <h1 className="text-5xl font-extrabold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Create Your Meme</h1>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl">
