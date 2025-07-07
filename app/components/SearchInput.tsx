@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 const SearchInput = () => {
   const router = useRouter();
@@ -10,16 +10,17 @@ const SearchInput = () => {
   const [search, setSearch] = React.useState(
     searchParam.get("search")?.trim() || ""
   );
+  const debouncedSearch = debounce(search, 700);
   useEffect(() => {
     const params = new URLSearchParams(searchParam);
     if (search) {
-      params.set("search", search);
+      params.set("search", debouncedSearch);
     } else {
       params.delete("search");
     }
 
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [search]);
+  }, [debouncedSearch]);
   return (
     <div className="flex items-center">
       <input
@@ -30,6 +31,17 @@ const SearchInput = () => {
       />
     </div>
   );
+};
+
+const debounce = (search: string, wait: number) => {
+  const [input, setInput] = useState(search);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInput(search);
+    }, wait);
+    return () => clearTimeout(timer);
+  }, [search]);
+  return input;
 };
 
 export default SearchInput;

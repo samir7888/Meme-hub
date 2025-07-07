@@ -43,8 +43,8 @@ console.log(response)
     });
   }
 
-  async getImages() {
-    return this.fetch("/image");
+  async getImages(url:string) {
+    return this.fetch(`/image${url}`);
   }
 
   async createImage(imageData: ImageFormData) {

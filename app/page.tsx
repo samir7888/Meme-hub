@@ -1,10 +1,11 @@
 "use client";
-import { IKVideo } from "imagekitio-react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { apiClient } from "./components/api-client";
 import { IImage } from "@/models/Image";
 import { Image } from "@imagekit/react";
+import SearchInput from "./components/SearchInput";
 
 interface IVideo {
   _id: string;
@@ -15,68 +16,58 @@ interface IVideo {
 }
 
 export default function Home() {
+ const searchParams = useSearchParams();
+  const search = searchParams.get("search");
+  console.log(search)
+  const url = search ? `?search=${search}` : "";
+  console.log(url)
   const [loading, setLoading] = useState(false);
-  const [collections, setCollections] = useState<any[]>([]);
-  const fetchCollections = async () => {
+  const [images, setImages] = useState<IImage[]>([]);
+  const fetchImages = async () => {
     setLoading(true);
-    const videos = (await apiClient.getVideos()) as IVideo[];
-    const images = (await apiClient.getImages()) as IImage[];
-    setCollections([...videos, ...images]);
+    const response  = await apiClient.getImages(url);
+    console.log(response)
+    setImages(response);
     setLoading(false);
   };
   useEffect(() => {
-    fetchCollections();
-  }, []);
+    fetchImages();
+  }, [search]);
 
-  const handleDelete = async (id: string, type: "image" | "video") => {
+  const handleDelete = async (id: string) => {
     try {
-      if (type === "image") {
-        await apiClient.deleteImage(id);
-      } else {
-        await apiClient.deleteVideo(id);
-      }
-      fetchCollections(); // Refresh the list after deletion
+      await apiClient.deleteImage(id);
+      fetchImages(); // Refresh the list after deletion
     } catch (error) {
-      console.error(`Error deleting ${type}:`, error);
-      alert(`Failed to delete ${type}. Please try again.`);
+      console.error(`Error deleting image:`, error);
+      alert(`Failed to delete image. Please try again.`);
     }
   };
   if (loading) {
     return <p className="text-white text-center mt-8">Loading...</p>;
   }
-  if (collections.length === 0) {
+  if (!images || images.length === 0) {
     return (
       <p className="text-white text-center mt-8">No Meme Templates Found</p>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 bg-black text-white">
+    <main className="space-y-6 flex min-h-screen flex-col items-center p-8 bg-black text-white">
       <h1 className="text-5xl pt-16 font-extrabold mb-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         <span>Your Meme Templates</span>
       </h1>
-
+<SearchInput />
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
-        {collections.map((item) => (
+        {images.map((item) => (
           <div
-            key={item._id}
+            key={item.title}
             className="bg-gray-900 rounded-lg shadow-lg overflow-hidden"
           >
             <Link
-              href={`/editor/${item.imageUrl ? item.imageUrl : item.videoUrl}`}
+              href={`/editor/${item.imageUrl}`}
             >
               <div className="relative w-full h-64 cursor-pointer">
-                {item.videoUrl ? (
-                  <IKVideo
-                    urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL!}
-                    path={item.videoUrl}
-                    width="100%"
-                    height="100%"
-                    controls={false}
-                    className="object-cover"
-                    poster={item.thumbnailUrl || undefined}
-                  />
-                ) : (
                   <Image
                     className="object-top aspect-square h-64"
                     urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL!}
@@ -86,14 +77,13 @@ export default function Home() {
                     alt="Picture of the author"
                     transformation={[{ width: 500, height: 500 }]}
                   />
-                )}
               </div>
             </Link>
             <div className="p-4">
               <h3 className="text-lg font-bold">{item.title}</h3>
               <button
                 onClick={() =>
-                  handleDelete(item._id, "videoUrl" in item ? "video" : "image")
+                  handleDelete(item._id)
                 }
                 className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
               >

@@ -3,12 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import Image, { IImage } from "@/models/Image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   await connectToDatabase();
+  const url = new URL(request.url);
+  const search = url.searchParams.get("search");
 
   try {
-    const images = await Image.find({}).sort({ createdAt: -1 }).lean();
+    const images = search
+      ? await Image.find({ title: { $regex: search, $options: "i" } })
+      : await Image.find({});
     if (!images || images.length === 0) {
       return NextResponse.json([], { status: 200 });
     }
@@ -60,7 +63,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const imageId = request.nextUrl.searchParams.get("id");
-    console.log(imageId,"imageId")
+    console.log(imageId, "imageId");
     if (!imageId) {
       return NextResponse.json(
         { error: "Missing required fields" },
