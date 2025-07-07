@@ -49,6 +49,7 @@ export default function Home() {
       <p className="text-white text-center mt-8">No Meme Templates Found</p>
     );
   }
+
   return (
     <main className="flex min-h-screen flex-col items-center p-8 bg-black text-white">
       <h1 className="text-5xl pt-16 font-extrabold mb-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
@@ -61,7 +62,7 @@ export default function Home() {
             key={item._id}
             className="bg-gray-900 rounded-lg shadow-lg overflow-hidden"
           >
-            <Link href={`/editor/${item._id}`}>
+            <Link href={`/editor/${item.imageUrl ? item.imageUrl : item.videoUrl}`}>
               <div className="relative w-full h-64 cursor-pointer">
                 {item.videoUrl ? (
                   <IKVideo
