@@ -11,6 +11,12 @@ interface TextElement {
   color: string;
   fontFamily: string;
   isDragging: boolean;
+  strokeColor: string;
+  strokeWidth: number;
+  shadowColor: string;
+  shadowBlur: number;
+  shadowOffsetX: number;
+  shadowOffsetY: number;
 }
 
 export default function MemeEditor() {
@@ -29,6 +35,12 @@ export default function MemeEditor() {
       color: "#FFFFFF",
       fontFamily: "Impact",
       isDragging: false,
+      strokeColor: "#000000",
+      strokeWidth: 0.004,
+      shadowColor: "rgba(0,0,0,0)",
+      shadowBlur: 0,
+      shadowOffsetX: 0,
+      shadowOffsetY: 0,
     },
     {
       id: "bottom",
@@ -39,12 +51,25 @@ export default function MemeEditor() {
       color: "#FFFFFF",
       fontFamily: "Impact",
       isDragging: false,
+      strokeColor: "#000000",
+      strokeWidth: 0.004,
+      shadowColor: "rgba(0,0,0,0)",
+      shadowBlur: 0,
+      shadowOffsetX: 0,
+      shadowOffsetY: 0,
     },
   ]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [draggedElementId, setDraggedElementId] = useState<string | null>(null);
   const [dragOffsetX, setDragOffsetX] = useState(0);
   const [dragOffsetY, setDragOffsetY] = useState(0);
+  const [selectedTextElementId, setSelectedTextElementId] = useState<
+    string | null
+  >(null);
+
+  const selectedTextElement = selectedTextElementId
+    ? textElements.find((el) => el.id === selectedTextElementId)
+    : null;
 
   const drawMeme = useCallback(() => {
     const canvas = canvasRef.current;
@@ -61,11 +86,17 @@ export default function MemeEditor() {
 
     textElements.forEach((textEl) => {
       ctx.fillStyle = textEl.color;
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = canvas.width * 0.004;
+      ctx.strokeStyle = textEl.strokeColor;
+      ctx.lineWidth = canvas.width * textEl.strokeWidth;
       ctx.textAlign = "center";
       ctx.font = `${canvas.height * textEl.fontSize}px ${textEl.fontFamily}`;
       ctx.textBaseline = "top";
+
+      // Apply shadow properties
+      ctx.shadowColor = textEl.shadowColor;
+      ctx.shadowBlur = textEl.shadowBlur;
+      ctx.shadowOffsetX = textEl.shadowOffsetX;
+      ctx.shadowOffsetY = textEl.shadowOffsetY;
 
       const xPos = canvas.width * textEl.x;
       const yPos = canvas.height * textEl.y;
@@ -77,6 +108,12 @@ export default function MemeEditor() {
 
       ctx.fillText(textEl.value.toUpperCase(), xPos, yPos);
       ctx.strokeText(textEl.value.toUpperCase(), xPos, yPos);
+
+      // Reset shadow properties to avoid affecting other elements
+      ctx.shadowColor = "rgba(0,0,0,0)";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
     });
   }, [textElements, isImageLoaded]);
 
@@ -183,6 +220,12 @@ export default function MemeEditor() {
         color: "#FFFFFF",
         fontFamily: "Impact",
         isDragging: false,
+        strokeColor: "#000000",
+        strokeWidth: 0.004,
+        shadowColor: "rgba(0,0,0,0)",
+        shadowBlur: 0,
+        shadowOffsetX: 0,
+        shadowOffsetY: 0,
       },
     ]);
   };
@@ -195,6 +238,20 @@ export default function MemeEditor() {
     setTextElements((prev) =>
       prev.map((el) => (el.id === id ? { ...el, value: newValue } : el))
     );
+  };
+
+  const updateTextProperty = (
+    id: string,
+    property: keyof TextElement,
+    value: any
+  ) => {
+    setTextElements((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, [property]: value } : el))
+    );
+  };
+
+  const handleSelectTextElement = (id: string) => {
+    setSelectedTextElementId(id);
   };
 
   const downloadMeme = () => {
@@ -271,21 +328,197 @@ export default function MemeEditor() {
           </button>
 
           {textElements.map((textEl) => (
-            <div key={textEl.id} className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder={`Text for ${textEl.id}`}
-                className="flex-grow p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-                value={textEl.value}
-                onChange={(e) => updateTextValue(textEl.id, e.target.value)}
-              />
-              {textEl.id !== "top" && textEl.id !== "bottom" && (
+            <div
+              key={textEl.id}
+              className="flex flex-col gap-2 p-3 bg-gray-700 rounded-md"
+            >
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => removeTextField(textEl.id)}
-                  className="px-3 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  onClick={() => {
+                    if (selectedTextElementId === textEl.id) {
+                      setSelectedTextElementId(null);
+                      return;
+                    }
+                    handleSelectTextElement(textEl.id)
+                  }}
+                  className={`px-3 py-2 rounded-lg text-white font-semibold ${
+                    selectedTextElementId === textEl.id
+                      ? "bg-purple-600"
+                      : "bg-gray-600"
+                  } hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500`}
                 >
-                  Remove
+                  {selectedTextElementId === textEl.id ? "UnSelect" : "Select"}
                 </button>
+                <input
+                  type="text"
+                  placeholder={`Text for ${textEl.id}`}
+                  className="flex-grow p-3 rounded-md bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+                  value={textEl.value}
+                  onChange={(e) => updateTextValue(textEl.id, e.target.value)}
+                />
+                {textEl.id !== "top" && textEl.id !== "bottom" && (
+                  <button
+                    onClick={() => removeTextField(textEl.id)}
+                    className="px-3 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              {selectedTextElementId === textEl.id && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <label className="flex flex-col text-sm">
+                    Font Size:
+                    <input
+                      type="range"
+                      min="0.01"
+                      max="0.2"
+                      step="0.005"
+                      value={textEl.fontSize}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "fontSize",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Color:
+                    <input
+                      type="color"
+                      value={textEl.color}
+                      onChange={(e) =>
+                        updateTextProperty(textEl.id, "color", e.target.value)
+                      }
+                      className="w-full h-8"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Font Family:
+                    <select
+                      value={textEl.fontFamily}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "fontFamily",
+                          e.target.value
+                        )
+                      }
+                      className="p-2 rounded-md bg-gray-600 border border-gray-500 text-white"
+                    >
+                      <option value="Impact">Impact</option>
+                      <option value="Arial">Arial</option>
+                      <option value="Verdana">Verdana</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                      <option value="Courier New">Courier New</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Stroke Color:
+                    <input
+                      type="color"
+                      value={textEl.strokeColor}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "strokeColor",
+                          e.target.value
+                        )
+                      }
+                      className="w-full h-8"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Stroke Width:
+                    <input
+                      type="range"
+                      min="0"
+                      max="0.02"
+                      step="0.001"
+                      value={textEl.strokeWidth}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "strokeWidth",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Shadow Color:
+                    <input
+                      type="color"
+                      value={textEl.shadowColor}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "shadowColor",
+                          e.target.value
+                        )
+                      }
+                      className="w-full h-8"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Shadow Blur:
+                    <input
+                      type="range"
+                      min="0"
+                      max="20"
+                      step="1"
+                      value={textEl.shadowBlur}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "shadowBlur",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Shadow Offset X:
+                    <input
+                      type="range"
+                      min="-20"
+                      max="20"
+                      step="1"
+                      value={textEl.shadowOffsetX}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "shadowOffsetX",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full"
+                    />
+                  </label>
+                  <label className="flex flex-col text-sm">
+                    Shadow Offset Y:
+                    <input
+                      type="range"
+                      min="-20"
+                      max="20"
+                      step="1"
+                      value={textEl.shadowOffsetY}
+                      onChange={(e) =>
+                        updateTextProperty(
+                          textEl.id,
+                          "shadowOffsetY",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full"
+                    />
+                  </label>
+                </div>
               )}
             </div>
           ))}

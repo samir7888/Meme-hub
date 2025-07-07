@@ -28,9 +28,9 @@ export default function Home() {
     fetchCollections();
   }, []);
 
-  const handleDelete = async (id: string, type: 'image' | 'video') => {
+  const handleDelete = async (id: string, type: "image" | "video") => {
     try {
-      if (type === 'image') {
+      if (type === "image") {
         await apiClient.deleteImage(id);
       } else {
         await apiClient.deleteVideo(id);
@@ -62,7 +62,9 @@ export default function Home() {
             key={item._id}
             className="bg-gray-900 rounded-lg shadow-lg overflow-hidden"
           >
-            <Link href={`/editor/${item.imageUrl ? item.imageUrl : item.videoUrl}`}>
+            <Link
+              href={`/editor/${item.imageUrl ? item.imageUrl : item.videoUrl}`}
+            >
               <div className="relative w-full h-64 cursor-pointer">
                 {item.videoUrl ? (
                   <IKVideo
@@ -76,7 +78,7 @@ export default function Home() {
                   />
                 ) : (
                   <Image
-                  className="object-top aspect-square h-64"
+                    className="object-top aspect-square h-64"
                     urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL!}
                     src={item.imageUrl}
                     width={500}
@@ -90,7 +92,9 @@ export default function Home() {
             <div className="p-4">
               <h3 className="text-lg font-bold">{item.title}</h3>
               <button
-                onClick={() => handleDelete(item._id, 'videoUrl' in item ? 'video' : 'image')}
+                onClick={() =>
+                  handleDelete(item._id, "videoUrl" in item ? "video" : "image")
+                }
                 className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
               >
                 Delete
