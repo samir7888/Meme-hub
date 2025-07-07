@@ -18,16 +18,13 @@ interface IVideo {
 export default function Home() {
  const searchParams = useSearchParams();
   const search = searchParams.get("search");
-  console.log(search)
   const url = search ? `?search=${search}` : "";
-  console.log(url)
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<IImage[]>([]);
   const fetchImages = async () => {
     setLoading(true);
     const response  = await apiClient.getImages(url);
-    console.log(response)
-    setImages(response);
+    setImages(response as IImage[]);
     setLoading(false);
   };
   useEffect(() => {
@@ -83,7 +80,7 @@ export default function Home() {
               <h3 className="text-lg font-bold">{item.title}</h3>
               <button
                 onClick={() =>
-                  handleDelete(item._id)
+                  handleDelete(item._id.toString())
                 }
                 className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
               >
