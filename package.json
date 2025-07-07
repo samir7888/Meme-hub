@@ -9,8 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@imagekit/next": "^2.1.2",
+    "@imagekit/react": "^5.0.1",
+    "@types/bcryptjs": "^3.0.0",
+    "bcryptjs": "^3.0.2",
     "framer-motion": "^12.19.2",
+    "imagekitio-react": "^4.3.0",
+    "mongoose": "^8.16.1",
     "next": "15.3.4",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
