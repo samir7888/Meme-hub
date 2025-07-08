@@ -16,14 +16,14 @@ interface IVideo {
 }
 
 export default function Home() {
- const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const search = searchParams.get("search");
   const url = search ? `?search=${search}` : "";
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<IImage[]>([]);
   const fetchImages = async () => {
     setLoading(true);
-    const response  = await apiClient.getImages(url);
+    const response = await apiClient.getImages(url);
     setImages(response as IImage[]);
     setLoading(false);
   };
@@ -31,15 +31,6 @@ export default function Home() {
     fetchImages();
   }, [search]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await apiClient.deleteImage(id);
-      fetchImages(); // Refresh the list after deletion
-    } catch (error) {
-      console.error(`Error deleting image:`, error);
-      alert(`Failed to delete image. Please try again.`);
-    }
-  };
   if (loading) {
     return <p className="text-white text-center mt-8">Loading...</p>;
   }
@@ -54,38 +45,28 @@ export default function Home() {
       <h1 className="text-5xl pt-16 font-extrabold mb-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         <span>Your Meme Templates</span>
       </h1>
-<SearchInput />
+      <SearchInput />
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
         {images.map((item) => (
           <div
             key={item.title}
             className="bg-gray-900 rounded-lg shadow-lg overflow-hidden"
           >
-            <Link
-              href={`/editor/${item.imageUrl}`}
-            >
+            <Link href={`/editor/${item.imageUrl}`}>
               <div className="relative w-full h-64 cursor-pointer">
-                  <Image
-                    className="object-top aspect-square h-64"
-                    urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL!}
-                    src={item.imageUrl}
-                    width={500}
-                    height={300}
-                    alt="Picture of the author"
-                    transformation={[{ width: 500, height: 500 }]}
-                  />
+                <Image
+                  className="object-top aspect-square h-64"
+                  urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL!}
+                  src={item.imageUrl}
+                  width={500}
+                  height={300}
+                  alt="Picture of the author"
+                  transformation={[{ width: 500, height: 500 }]}
+                />
               </div>
             </Link>
             <div className="p-4">
               <h3 className="text-lg font-bold">{item.title}</h3>
-              <button
-                onClick={() =>
-                  handleDelete(item._id.toString())
-                }
-                className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Delete
-              </button>
             </div>
           </div>
         ))}

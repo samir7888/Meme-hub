@@ -25,7 +25,7 @@ class ApiClient {
       headers: defaultHeaders,
       body: body ? JSON.stringify(body) : undefined,
     });
-console.log(response)
+    console.log(response);
     if (!response.ok) {
       throw new Error(await response.text());
     }
@@ -43,7 +43,7 @@ console.log(response)
     });
   }
 
-  async getImages(url:string) {
+  async getImages(url: string) {
     return this.fetch(`/image${url}`);
   }
 
@@ -51,19 +51,6 @@ console.log(response)
     return this.fetch("/image", {
       method: "POST",
       body: imageData,
-    });
-  }
-
-  async deleteImage(imageId: string) {
-    console.log(imageId);
-    return this.fetch(`/image?id=${imageId}`, {
-      method: "DELETE",
-    });
-  }
-
-  async deleteVideo(videoId: string) {
-    return this.fetch(`/video?id=${videoId}`, {
-      method: "DELETE",
     });
   }
 }
