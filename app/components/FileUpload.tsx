@@ -60,7 +60,7 @@ const FileUpload = ({ onSuccess, fileType }: FileUploadProps) => {
     const uploadResponse = await upload({
       file,
       fileName: file.name,
-      publicKey: process.env.NEXT_PUBLIC_PUBLIC_KEY as string,
+      publicKey: process.env.NEXT_PUBLIC_KEY as string,
       expire: auth.authenticationParameters.expire,
       signature: auth.authenticationParameters.signature,
       token: auth.authenticationParameters.token,
