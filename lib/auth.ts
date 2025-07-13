@@ -1,8 +1,8 @@
-import User from "@/models/User";
+import prisma from "./db";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { connectToDatabase } from "./db";
 import bcrypt from "bcryptjs";
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -20,9 +20,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
         try {
-          await connectToDatabase();
-          const user = await User.findOne({ email: credentials.email });
-          console.log(user)
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
           if (!user) {
             throw new Error("User not found");
           }
@@ -31,10 +31,10 @@ export const authOptions: NextAuthOptions = {
             user.password
           );
           if (!valid) {
-            throw new Error("Invalid  password");
+            throw new Error("Invalid password");
           }
           return {
-            id: user._id.toString(),
+            id: user.id,
             email: user.email,
           };
         } catch (error) {
@@ -47,7 +47,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
-        token.id = user.id.toString();
+        token.id = user.id;
       }
       return token;
     },
@@ -57,13 +57,12 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    
   },
-  pages:{
+  pages: {
     signIn: "/login",
-    error: "/login", 
+    error: "/login",
   },
-  session:{
+  session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60 * 30, // 30 days
   },

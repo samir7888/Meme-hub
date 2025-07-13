@@ -1,16 +1,15 @@
 import { authOptions } from "@/lib/auth";
-import { connectToDatabase } from "@/lib/db";
-import Video, { IVideo } from "@/models/Video";
+import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
-  await connectToDatabase();
   try {
-    const videos = await Video.find({}).sort({ createdAt: -1 }).lean();
-    if (!videos || videos.length === 0) {
-      return NextResponse.json([], { status: 200 });
-    }
+    const videos = await prisma.video.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
     return NextResponse.json(videos, { status: 200 });
   } catch (error) {
     console.log("Error getting videos", error);
@@ -28,27 +27,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body: IVideo = await request.json();
-    if (
-      !body.title ||
-      !body.description ||
-      !body.videoUrl 
-    ) {
+    const body: {
+      title: string;
+      description: string;
+      videoUrl: string;
+      thumbnailUrl?: string;
+      controls?: boolean;
+      width?: number;
+      height?: number;
+      quality?: number;
+    } = await request.json();
+    if (!body.title || !body.description || !body.videoUrl) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
-    const videoData = {
-      ...body,
-      controls: body?.controls ?? true, 
-      transformation: {
-        width: body.transformation?.width || 1080,
-        height: body.transformation?.height || 1920,
-        quality: body.transformation?.quality || 100,
+    const newVideo = await prisma.video.create({
+      data: {
+        title: body.title,
+        description: body.description,
+        videoUrl: body.videoUrl,
+        thumbnailUrl: body.thumbnailUrl,
+        controls: body.controls,
+        width: body.width,
+        height: body.height,
+        quality: body.quality,
       },
-    };
-    const newVideo = await Video.create(videoData);
+    });
     return NextResponse.json(newVideo, { status: 201 });
   } catch (error) {
     console.log("Error creating video", error);
@@ -76,11 +82,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const video = await Video.findById(videoId);
-    if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
-    await Video.deleteOne({ _id: videoId });
+    await prisma.video.delete({
+      where: {
+        id: videoId,
+      },
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log("Error deleting video", error);
@@ -90,3 +96,4 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+

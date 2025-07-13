@@ -3,17 +3,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { apiClient } from "./components/api-client";
-import { IImage } from "@/models/Image";
 import { Image } from "@imagekit/react";
 import SearchInput from "./components/SearchInput";
 import { Suspense } from "react";
-interface IVideo {
-  _id: string;
-  title: string;
-  description: string;
-  videoUrl: string;
-  thumbnailUrl?: string; // Made optional
-}
+import { Image as IImage } from "@/types/index";
+
 
 export default function Home() {
   const searchParams = useSearchParams();

@@ -1,10 +1,10 @@
-import { connectToDatabase } from "@/lib/db";
-import User from "../../../../models/User";
+import prisma from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
-
+console.log(email,password)
   if (!email || !password) {
     return NextResponse.json(
       { error: "Email and password are required" },
@@ -13,9 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await connectToDatabase();
-
-    const user = await User.findOne({ email });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (user) {
       return NextResponse.json(
@@ -24,7 +22,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await User.create({ email, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
+console.log(hashedPassword)
+    await prisma.user.create({
+      data: { email, password: hashedPassword },
+    });
 
     return NextResponse.json(
       { message: "User created successfully" },
