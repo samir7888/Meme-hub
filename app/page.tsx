@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { apiClient } from "./components/api-client";
 import { Image } from "@imagekit/react";
 import SearchInput from "./components/SearchInput";
+import { Suspense } from "react";
 import { Image as IImage } from "@/types/index";
 
 
@@ -38,7 +39,9 @@ export default function Home() {
       <h1 className="text-5xl pt-16 font-extrabold mb-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         <span>Your Meme Templates</span>
       </h1>
+      <Suspense>
         <SearchInput />
+      </Suspense>
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
         {images.map((item) => (
           <div
