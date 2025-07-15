@@ -3350,10 +3350,10 @@ export namespace Prisma {
       description: string
       videoUrl: string
       thumbnailUrl: string | null
-      controls: boolean | null
-      width: number | null
-      height: number | null
-      quality: number | null
+      controls?: boolean | null
+      width?: number | null
+      height?: number | null
+      quality?: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["video"]>
