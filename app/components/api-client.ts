@@ -8,7 +8,7 @@ type fetchOptions = {
   body?: any;
 };
 
-type VideoFormData = Omit<Video, "id" | "createdAt" | "updatedAt">;
+type VideoFormData = Omit<Video, "id" | "createdAt" | "updatedAt" | "controls" | "width" | "height" | "quality">;
 type ImageFormData = Omit<Image, "id" | "createdAt" | "updatedAt">;
 
 class ApiClient {
