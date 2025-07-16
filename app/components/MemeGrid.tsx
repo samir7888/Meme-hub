@@ -52,16 +52,16 @@ export default function MemeGrid() {
           </button>
         </Link>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 w-full max-w-6xl">
         {images.map((item) => (
           <div
             key={item.id}
             className="bg-gray-900 rounded-lg shadow-lg overflow-hidden"
           >
             <Link href={`/editor/${item.imageUrl}`}>
-              <div className="relative w-full h-64 cursor-pointer">
+              <div className="relative w-full h-auto cursor-pointer">
                 <Image
-                  className="object-top aspect-square h-64"
+                  className="object-top aspect-square h-auto"
                   urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL!}
                   src={item.imageUrl}
                   width={500}
@@ -72,7 +72,7 @@ export default function MemeGrid() {
               </div>
             </Link>
             <div className="p-4">
-              <h3 className="text-lg font-bold">{item.title}</h3>
+              <h3 className="text-lg text-balance font-bold">{item.title}</h3>
             </div>
           </div>
         ))}
