@@ -27,7 +27,6 @@ class ApiClient {
       headers: defaultHeaders,
       body: body ? JSON.stringify(body) : undefined,
     });
-    console.log(response);
     if (!response.ok) {
       throw new Error(await response.text());
     }
