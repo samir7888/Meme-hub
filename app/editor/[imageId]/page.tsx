@@ -319,7 +319,7 @@ export default function MemeEditor() {
           ></canvas>
         </div>
 
-        <div className="flex-1 flex flex-col gap-6 bg-gray-800 rounded-lg shadow-lg p-6">
+        <div className="flex-1 flex flex-col gap-6 bg-gray-800 rounded-lg shadow-lg  p-1 md:p-6">
           <button
             onClick={addTextField}
             className="w-full px-4 py-2 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -526,7 +526,7 @@ export default function MemeEditor() {
           <div className="flex gap-4 mt-4">
             <button
               onClick={downloadMeme}
-              className="flex-1 px-6 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+              className="flex-1 md:px-6 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
             >
               Download Meme
             </button>
