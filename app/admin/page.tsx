@@ -8,7 +8,7 @@ export default function Admin() {
   };
 
   return (
-    <main className="flex min-h-screen  gap-12 justify-center items-center  p-24 bg-black  text-white">
+    <main className="flex min-h-screen  gap-12 justify-center items-center p-5 lg:p-24 bg-black  text-white">
       <FileUpload onSuccess={handleSuccess} fileType="image" />
     </main>
   );

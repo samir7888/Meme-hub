@@ -332,7 +332,7 @@ export default function MemeEditor() {
               key={textEl.id}
               className="flex flex-col gap-2 p-3 bg-gray-700 rounded-md"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => {
                     if (selectedTextElementId === textEl.id) {
