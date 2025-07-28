@@ -19,46 +19,35 @@ interface TextElement {
   shadowOffsetY: number;
 }
 
+interface DrawPoint {
+  x: number;
+  y: number;
+}
+
+interface DrawStroke {
+  points: DrawPoint[];
+  color: string;
+  size: number;
+}
+
+interface OverlayImage {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  isDragging: boolean;
+}
+
 export default function MemeEditor() {
   const pathname = usePathname();
   const imageSrc = decodeURIComponent(pathname.split("/").pop() || "");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [textElements, setTextElements] = useState<TextElement[]>([
-    {
-      id: "top",
-      value: "TOP TEXT",
-      x: 0.5,
-      y: 0.05,
-      fontSize: 0.1,
-      color: "#FFFFFF",
-      fontFamily: "Impact",
-      isDragging: false,
-      strokeColor: "#000000",
-      strokeWidth: 0.004,
-      shadowColor: "rgba(0,0,0,0)",
-      shadowBlur: 0,
-      shadowOffsetX: 0,
-      shadowOffsetY: 0,
-    },
-    {
-      id: "bottom",
-      value: "BOTTOM TEXT",
-      x: 0.5,
-      y: 0.95,
-      fontSize: 0.1,
-      color: "#FFFFFF",
-      fontFamily: "Impact",
-      isDragging: false,
-      strokeColor: "#000000",
-      strokeWidth: 0.004,
-      shadowColor: "rgba(0,0,0,0)",
-      shadowBlur: 0,
-      shadowOffsetX: 0,
-      shadowOffsetY: 0,
-    },
-  ]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [textElements, setTextElements] = useState<TextElement[]>([]);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [draggedElementId, setDraggedElementId] = useState<string | null>(null);
   const [dragOffsetX, setDragOffsetX] = useState(0);
@@ -66,10 +55,22 @@ export default function MemeEditor() {
   const [selectedTextElementId, setSelectedTextElementId] = useState<
     string | null
   >(null);
+  const [showTextInputs, setShowTextInputs] = useState(false);
 
-  const selectedTextElement = selectedTextElementId
-    ? textElements.find((el) => el.id === selectedTextElementId)
-    : null;
+  // Drawing states
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawStrokes, setDrawStrokes] = useState<DrawStroke[]>([]);
+  const [currentStroke, setCurrentStroke] = useState<DrawPoint[]>([]);
+  const [drawColor, setDrawColor] = useState("#FF0000");
+  const [drawSize, setDrawSize] = useState(5);
+  const [isDrawMode, setIsDrawMode] = useState(false);
+
+  // Overlay images
+  const [overlayImages, setOverlayImages] = useState<OverlayImage[]>([]);
+  const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
+  const [selectedOverlayImageId, setSelectedOverlayImageId] = useState<
+    string | null
+  >(null);
 
   const drawMeme = useCallback(() => {
     const canvas = canvasRef.current;
@@ -84,6 +85,62 @@ export default function MemeEditor() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
+    // Draw overlay images
+    overlayImages.forEach((overlayImg) => {
+      const overlayElement = new Image();
+      overlayElement.onload = () => {
+        const x = canvas.width * overlayImg.x;
+        const y = canvas.height * overlayImg.y;
+        const width = canvas.width * overlayImg.width;
+        const height = canvas.height * overlayImg.height;
+        ctx.drawImage(overlayElement, x, y, width, height);
+      };
+      overlayElement.src = overlayImg.src;
+    });
+
+    // Draw strokes
+    drawStrokes.forEach((stroke) => {
+      if (stroke.points.length > 1) {
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(
+          canvas.width * stroke.points[0].x,
+          canvas.height * stroke.points[0].y
+        );
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(
+            canvas.width * stroke.points[i].x,
+            canvas.height * stroke.points[i].y
+          );
+        }
+        ctx.stroke();
+      }
+    });
+
+    // Draw current stroke
+    if (currentStroke.length > 1) {
+      ctx.strokeStyle = drawColor;
+      ctx.lineWidth = drawSize;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(
+        canvas.width * currentStroke[0].x,
+        canvas.height * currentStroke[0].y
+      );
+      for (let i = 1; i < currentStroke.length; i++) {
+        ctx.lineTo(
+          canvas.width * currentStroke[i].x,
+          canvas.height * currentStroke[i].y
+        );
+      }
+      ctx.stroke();
+    }
+
+    // Draw text elements with boundary constraints
     textElements.forEach((textEl) => {
       ctx.fillStyle = textEl.color;
       ctx.strokeStyle = textEl.strokeColor;
@@ -98,12 +155,26 @@ export default function MemeEditor() {
       ctx.shadowOffsetX = textEl.shadowOffsetX;
       ctx.shadowOffsetY = textEl.shadowOffsetY;
 
-      const xPos = canvas.width * textEl.x;
-      const yPos = canvas.height * textEl.y;
+      // Constrain text position within canvas bounds
+      const textWidth = ctx.measureText(textEl.value.toUpperCase()).width;
+      const textHeight = canvas.height * textEl.fontSize;
+
+      let xPos = Math.max(
+        textWidth / 2,
+        Math.min(canvas.width - textWidth / 2, canvas.width * textEl.x)
+      );
+      let yPos = Math.max(
+        0,
+        Math.min(canvas.height - textHeight, canvas.height * textEl.y)
+      );
 
       // Adjust text baseline for bottom text
       if (textEl.id === "bottom" || textEl.y > 0.5) {
-        ctx.textBaseline = "alphabetic"; // or 'bottom'
+        ctx.textBaseline = "alphabetic";
+        yPos = Math.max(
+          textHeight,
+          Math.min(canvas.height, canvas.height * textEl.y)
+        );
       }
 
       ctx.fillText(textEl.value.toUpperCase(), xPos, yPos);
@@ -115,7 +186,15 @@ export default function MemeEditor() {
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     });
-  }, [textElements, isImageLoaded]);
+  }, [
+    textElements,
+    isImageLoaded,
+    drawStrokes,
+    currentStroke,
+    drawColor,
+    drawSize,
+    overlayImages,
+  ]);
 
   useEffect(() => {
     drawMeme();
@@ -126,17 +205,85 @@ export default function MemeEditor() {
     drawMeme();
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Helper function to get coordinates from mouse or touch event
+  const getEventCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return { mouseX: 0, mouseY: 0 };
 
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
+    let clientX, clientY;
+    if ("touches" in e) {
+      // Touch event
+      const touch = e.touches[0] || e.changedTouches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
 
+    const mouseX = (clientX - rect.left) * scaleX;
+    const mouseY = (clientY - rect.top) * scaleY;
+
+    return { mouseX, mouseY };
+  };
+
+  const handleStart = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const { mouseX, mouseY } = getEventCoordinates(e);
+
+    if (isDrawMode) {
+      setIsDrawing(true);
+      const normalizedX = mouseX / canvas.width;
+      const normalizedY = mouseY / canvas.height;
+      setCurrentStroke([{ x: normalizedX, y: normalizedY }]);
+      return;
+    }
+
+    // Check for overlay image hit first
+    let foundImage: OverlayImage | null = null;
+    for (let i = overlayImages.length - 1; i >= 0; i--) {
+      const overlayImg = overlayImages[i];
+      const x = canvas.width * overlayImg.x;
+      const y = canvas.height * overlayImg.y;
+      const width = canvas.width * overlayImg.width;
+      const height = canvas.height * overlayImg.height;
+
+      if (
+        mouseX >= x &&
+        mouseX <= x + width &&
+        mouseY >= y &&
+        mouseY <= y + height
+      ) {
+        foundImage = overlayImg;
+        setDraggedImageId(overlayImg.id);
+        setDragOffsetX(mouseX - x);
+        setDragOffsetY(mouseY - y);
+        break;
+      }
+    }
+
+    if (foundImage) {
+      setOverlayImages((prev) =>
+        prev.map((img) =>
+          img.id === foundImage?.id ? { ...img, isDragging: true } : img
+        )
+      );
+      return;
+    }
+
+    // Check for text element hit
     let foundElement: TextElement | null = null;
     for (let i = textElements.length - 1; i >= 0; i--) {
       const textEl = textElements[i];
@@ -152,10 +299,9 @@ export default function MemeEditor() {
 
       // Adjust y for hit detection based on textBaseline
       if (textEl.id === "bottom" || textEl.y > 0.5) {
-        y -= textHeight; // Approximate top of text for bottom-aligned
+        y -= textHeight;
       }
 
-      // Simple bounding box check
       if (
         mouseX >= x - textWidth / 2 &&
         mouseX <= x + textWidth / 2 &&
@@ -179,55 +325,127 @@ export default function MemeEditor() {
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleMove = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    e.preventDefault();
     const canvas = canvasRef.current;
-    if (!canvas || !draggedElementId) return;
+    if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const { mouseX, mouseY } = getEventCoordinates(e);
 
-    const mouseX = (e.clientX - rect.left) * scaleX;
-    const mouseY = (e.clientY - rect.top) * scaleY;
+    if (isDrawing && isDrawMode) {
+      const normalizedX = mouseX / canvas.width;
+      const normalizedY = mouseY / canvas.height;
+      setCurrentStroke((prev) => [...prev, { x: normalizedX, y: normalizedY }]);
+      return;
+    }
 
-    setTextElements((prev) =>
-      prev.map((el) => {
-        if (el.id === draggedElementId) {
-          const newX = (mouseX - dragOffsetX) / canvas.width;
-          const newY = (mouseY - dragOffsetY) / canvas.height;
-          return { ...el, x: newX, y: newY };
-        }
-        return el;
-      })
+    if (draggedImageId) {
+      setOverlayImages((prev) =>
+        prev.map((img) => {
+          if (img.id === draggedImageId) {
+            const newX = Math.max(
+              0,
+              Math.min(1 - img.width, (mouseX - dragOffsetX) / canvas.width)
+            );
+            const newY = Math.max(
+              0,
+              Math.min(1 - img.height, (mouseY - dragOffsetY) / canvas.height)
+            );
+            return { ...img, x: newX, y: newY };
+          }
+          return img;
+        })
+      );
+      return;
+    }
+
+    if (draggedElementId) {
+      setTextElements((prev) =>
+        prev.map((el) => {
+          if (el.id === draggedElementId) {
+            const newX = Math.max(
+              0.1,
+              Math.min(0.9, (mouseX - dragOffsetX) / canvas.width)
+            );
+            const newY = Math.max(
+              0.05,
+              Math.min(0.95, (mouseY - dragOffsetY) / canvas.height)
+            );
+            return { ...el, x: newX, y: newY };
+          }
+          return el;
+        })
+      );
+    }
+  };
+
+  const handleEnd = (
+    e?:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    if (e) e.preventDefault();
+    if (isDrawing && currentStroke.length > 1) {
+      setDrawStrokes((prev) => [
+        ...prev,
+        { points: currentStroke, color: drawColor, size: drawSize },
+      ]);
+      setCurrentStroke([]);
+    }
+    setIsDrawing(false);
+    setDraggedElementId(null);
+    setDraggedImageId(null);
+    setTextElements((prev) => prev.map((el) => ({ ...el, isDragging: false })));
+    setOverlayImages((prev) =>
+      prev.map((img) => ({ ...img, isDragging: false }))
     );
   };
 
-  const handleMouseUp = () => {
-    setDraggedElementId(null);
-    setTextElements((prev) => prev.map((el) => ({ ...el, isDragging: false })));
-  };
-
   const addTextField = () => {
-    const newId = `text-${Date.now()}`;
-    setTextElements((prev) => [
-      ...prev,
-      {
-        id: newId,
-        value: "NEW TEXT",
-        x: 0.5,
-        y: 0.5,
-        fontSize: 0.08,
-        color: "#FFFFFF",
-        fontFamily: "Impact",
-        isDragging: false,
-        strokeColor: "#000000",
-        strokeWidth: 0.004,
-        shadowColor: "rgba(0,0,0,0)",
-        shadowBlur: 0,
-        shadowOffsetX: 0,
-        shadowOffsetY: 0,
-      },
-    ]);
+    if (!showTextInputs) {
+      setShowTextInputs(true);
+      setTextElements([
+        {
+          id: "text-1",
+          value: "YOUR TEXT",
+          x: 0.5,
+          y: 0.5,
+          fontSize: 0.1,
+          color: "#FFFFFF",
+          fontFamily: "Impact",
+          isDragging: false,
+          strokeColor: "#000000",
+          strokeWidth: 0.004,
+          shadowColor: "rgba(0,0,0,0)",
+          shadowBlur: 0,
+          shadowOffsetX: 0,
+          shadowOffsetY: 0,
+        },
+      ]);
+    } else {
+      const newId = `text-${Date.now()}`;
+      setTextElements((prev) => [
+        ...prev,
+        {
+          id: newId,
+          value: "NEW TEXT",
+          x: 0.5,
+          y: 0.5,
+          fontSize: 0.08,
+          color: "#FFFFFF",
+          fontFamily: "Impact",
+          isDragging: false,
+          strokeColor: "#000000",
+          strokeWidth: 0.004,
+          shadowColor: "rgba(0,0,0,0)",
+          shadowBlur: 0,
+          shadowOffsetX: 0,
+          shadowOffsetY: 0,
+        },
+      ]);
+    }
   };
 
   const removeTextField = (idToRemove: string) => {
@@ -252,6 +470,63 @@ export default function MemeEditor() {
 
   const handleSelectTextElement = (id: string) => {
     setSelectedTextElementId(id);
+  };
+
+  const undoLastStroke = () => {
+    setDrawStrokes((prev) => prev.slice(0, -1));
+  };
+
+  const eraseAllDrawings = () => {
+    setDrawStrokes([]);
+    setCurrentStroke([]);
+  };
+
+  const handleAddPhoto = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const newId = `overlay-${Date.now()}`;
+        setOverlayImages((prev) => [
+          ...prev,
+          {
+            id: newId,
+            src: event.target?.result as string,
+            x: 0.1,
+            y: 0.1,
+            width: 0.3,
+            height: 0.3,
+            isDragging: false,
+          },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeOverlayImage = (idToRemove: string) => {
+    setOverlayImages((prev) => prev.filter((img) => img.id !== idToRemove));
+    if (selectedOverlayImageId === idToRemove) {
+      setSelectedOverlayImageId(null);
+    }
+  };
+
+  const updateOverlayImageProperty = (
+    id: string,
+    property: keyof OverlayImage,
+    value: any
+  ) => {
+    setOverlayImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, [property]: value } : img))
+    );
+  };
+
+  const handleSelectOverlayImage = (id: string) => {
+    setSelectedOverlayImageId(selectedOverlayImageId === id ? null : id);
   };
 
   const downloadMeme = () => {
@@ -294,245 +569,441 @@ export default function MemeEditor() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 bg-black text-white">
-      <h1 className="text-5xl font-extrabold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 bg-black text-white">
+      <h1 className="text-3xl md:text-5xl font-extrabold mb-6 md:mb-12 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         Create Your Meme
       </h1>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl">
-        <div className="relative flex-1 bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-center">
+        <div className="relative flex-1 bg-gray-800 rounded-lg shadow-lg p-2 md:p-4 flex items-center justify-center">
           <img
             ref={imageRef}
             src={`${process.env.NEXT_PUBLIC_IMAGEKIT_URL}/${imageSrc}`}
             alt="Meme Template"
-            className="max-w-full max-h-[60vh] object-contain hidden"
+            className="max-w-full max-h-[50vh] md:max-h-[60vh] object-contain hidden"
             onLoad={handleImageLoad}
             crossOrigin="anonymous" // Important for canvas toDataURL if image is from different origin
           />
           <canvas
             ref={canvasRef}
-            className="max-w-full max-h-[60vh] object-contain border border-gray-700 rounded-md cursor-grab"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp} // End drag if mouse leaves canvas
+            className={`max-w-full max-h-[50vh] md:max-h-[60vh] object-contain border border-gray-700 rounded-md touch-none ${
+              isDrawMode ? "cursor-crosshair" : "cursor-grab"
+            }`}
+            onMouseDown={handleStart}
+            onMouseMove={handleMove}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
+            onTouchStart={handleStart}
+            onTouchMove={handleMove}
+            onTouchEnd={handleEnd}
+            onTouchCancel={handleEnd}
           ></canvas>
         </div>
 
-        <div className="flex-1 flex flex-col gap-6 bg-gray-800 rounded-lg shadow-lg  p-1 md:p-6">
-          <button
-            onClick={addTextField}
-            className="w-full px-4 py-2 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Add New Text Field
-          </button>
-
-          {textElements.map((textEl) => (
-            <div
-              key={textEl.id}
-              className="flex flex-col gap-2 p-3 bg-gray-700 rounded-md"
+        <div className="flex-1 flex flex-col gap-4 md:gap-6 bg-gray-800 rounded-lg shadow-lg p-3 md:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button
+              onClick={addTextField}
+              className="px-4 py-3 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
             >
-              <div className="flex items-center gap-2 flex-wrap">
+              {showTextInputs ? "Add Text Field" : "Add Text"}
+            </button>
+            <button
+              onClick={() => setIsDrawMode(!isDrawMode)}
+              className={`px-4 py-3 rounded-lg text-white font-semibold focus:outline-none focus:ring-2 text-sm md:text-base ${
+                isDrawMode
+                  ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                  : "bg-purple-600 hover:bg-purple-700 focus:ring-purple-500"
+              }`}
+            >
+              {isDrawMode ? "Exit Draw" : "Draw"}
+            </button>
+            <button
+              onClick={handleAddPhoto}
+              className="px-4 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base"
+            >
+              Add Photo
+            </button>
+          </div>
+
+          {isDrawMode && (
+            <div className="p-3 md:p-4 bg-gray-700 rounded-lg">
+              <h3 className="text-base md:text-lg font-semibold mb-3">
+                Drawing Tools
+              </h3>
+              <div className="grid grid-cols-2 md:flex gap-3 md:gap-4 items-center">
+                <label className="flex flex-col text-sm">
+                  Color:
+                  <input
+                    type="color"
+                    value={drawColor}
+                    onChange={(e) => setDrawColor(e.target.value)}
+                    className="w-full md:w-12 h-10 md:h-8 rounded"
+                  />
+                </label>
+                <label className="flex flex-col text-sm">
+                  Size: {drawSize}px
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={drawSize}
+                    onChange={(e) => setDrawSize(parseInt(e.target.value))}
+                    className="w-full md:w-24"
+                  />
+                </label>
                 <button
-                  onClick={() => {
-                    if (selectedTextElementId === textEl.id) {
-                      setSelectedTextElementId(null);
-                      return;
-                    }
-                    handleSelectTextElement(textEl.id)
-                  }}
-                  className={`px-3 py-2 rounded-lg text-white font-semibold ${
-                    selectedTextElementId === textEl.id
-                      ? "bg-purple-600"
-                      : "bg-gray-600"
-                  } hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                  onClick={undoLastStroke}
+                  className="px-3 py-2 bg-yellow-600 rounded-lg text-white font-semibold hover:bg-yellow-700 text-sm"
                 >
-                  {selectedTextElementId === textEl.id ? "UnSelect" : "Select"}
+                  Undo
                 </button>
-                <input
-                  type="text"
-                  placeholder={`Text for ${textEl.id}`}
-                  className="flex-grow p-3 rounded-md bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-                  value={textEl.value}
-                  onChange={(e) => updateTextValue(textEl.id, e.target.value)}
-                />
-                {textEl.id !== "top" && textEl.id !== "bottom" && (
-                  <button
-                    onClick={() => removeTextField(textEl.id)}
-                    className="px-3 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  >
-                    Remove
-                  </button>
+                <button
+                  onClick={eraseAllDrawings}
+                  className="px-3 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 text-sm"
+                >
+                  Erase All
+                </button>
+              </div>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+
+          {overlayImages.length > 0 && (
+            <div className="p-4 bg-gray-700 rounded-lg">
+              <h3 className="text-lg font-semibold mb-3">Overlay Images</h3>
+              {overlayImages.map((overlayImg) => (
+                <div
+                  key={overlayImg.id}
+                  className="flex flex-col gap-2 p-3 bg-gray-600 rounded-md mb-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={overlayImg.src}
+                      alt="Overlay"
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                    <span className="flex-1 text-sm">
+                      Image {overlayImg.id.split("-")[1]}
+                    </span>
+                    <button
+                      onClick={() => handleSelectOverlayImage(overlayImg.id)}
+                      className={`px-3 py-1 rounded text-white text-sm font-semibold ${
+                        selectedOverlayImageId === overlayImg.id
+                          ? "bg-purple-600 hover:bg-purple-700"
+                          : "bg-gray-500 hover:bg-gray-600"
+                      }`}
+                    >
+                      {selectedOverlayImageId === overlayImg.id
+                        ? "Selected"
+                        : "Select"}
+                    </button>
+                    <button
+                      onClick={() => removeOverlayImage(overlayImg.id)}
+                      className="px-2 py-1 bg-red-600 rounded text-white text-sm hover:bg-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {selectedOverlayImageId === overlayImg.id && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <label className="flex flex-col text-sm">
+                        Width: {Math.round(overlayImg.width * 100)}%
+                        <input
+                          type="range"
+                          min="0.05"
+                          max="1"
+                          step="0.05"
+                          value={overlayImg.width}
+                          onChange={(e) =>
+                            updateOverlayImageProperty(
+                              overlayImg.id,
+                              "width",
+                              parseFloat(e.target.value)
+                            )
+                          }
+                          className="w-full"
+                        />
+                      </label>
+                      <label className="flex flex-col text-sm">
+                        Height: {Math.round(overlayImg.height * 100)}%
+                        <input
+                          type="range"
+                          min="0.05"
+                          max="1"
+                          step="0.05"
+                          value={overlayImg.height}
+                          onChange={(e) =>
+                            updateOverlayImageProperty(
+                              overlayImg.id,
+                              "height",
+                              parseFloat(e.target.value)
+                            )
+                          }
+                          className="w-full"
+                        />
+                      </label>
+                      <label className="flex flex-col text-sm">
+                        X Position: {Math.round(overlayImg.x * 100)}%
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={overlayImg.x}
+                          onChange={(e) =>
+                            updateOverlayImageProperty(
+                              overlayImg.id,
+                              "x",
+                              parseFloat(e.target.value)
+                            )
+                          }
+                          className="w-full"
+                        />
+                      </label>
+                      <label className="flex flex-col text-sm">
+                        Y Position: {Math.round(overlayImg.y * 100)}%
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={overlayImg.y}
+                          onChange={(e) =>
+                            updateOverlayImageProperty(
+                              overlayImg.id,
+                              "y",
+                              parseFloat(e.target.value)
+                            )
+                          }
+                          className="w-full"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showTextInputs &&
+            textElements.map((textEl) => (
+              <div
+                key={textEl.id}
+                className="flex flex-col gap-2 p-3 bg-gray-700 rounded-md"
+              >
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (selectedTextElementId === textEl.id) {
+                          setSelectedTextElementId(null);
+                          return;
+                        }
+                        handleSelectTextElement(textEl.id);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-white font-semibold text-sm ${
+                        selectedTextElementId === textEl.id
+                          ? "bg-purple-600"
+                          : "bg-gray-600"
+                      } hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                    >
+                      {selectedTextElementId === textEl.id
+                        ? "UnSelect"
+                        : "Select"}
+                    </button>
+                    {textElements.length > 1 && (
+                      <button
+                        onClick={() => removeTextField(textEl.id)}
+                        className="px-3 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={`Text for ${textEl.id}`}
+                    className="flex-grow p-3 rounded-md bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm md:text-base"
+                    value={textEl.value}
+                    onChange={(e) => updateTextValue(textEl.id, e.target.value)}
+                  />
+                </div>
+                {selectedTextElementId === textEl.id && (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <label className="flex flex-col text-sm">
+                      Font Size:
+                      <input
+                        type="range"
+                        min="0.01"
+                        max="0.2"
+                        step="0.005"
+                        value={textEl.fontSize}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "fontSize",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Color:
+                      <input
+                        type="color"
+                        value={textEl.color}
+                        onChange={(e) =>
+                          updateTextProperty(textEl.id, "color", e.target.value)
+                        }
+                        className="w-full h-8"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Font Family:
+                      <select
+                        value={textEl.fontFamily}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "fontFamily",
+                            e.target.value
+                          )
+                        }
+                        className="p-2 rounded-md bg-gray-600 border border-gray-500 text-white"
+                      >
+                        <option value="Impact">Impact</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                      </select>
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Stroke Color:
+                      <input
+                        type="color"
+                        value={textEl.strokeColor}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "strokeColor",
+                            e.target.value
+                          )
+                        }
+                        className="w-full h-8"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Stroke Width:
+                      <input
+                        type="range"
+                        min="0"
+                        max="0.02"
+                        step="0.001"
+                        value={textEl.strokeWidth}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "strokeWidth",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Shadow Color:
+                      <input
+                        type="color"
+                        value={textEl.shadowColor}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "shadowColor",
+                            e.target.value
+                          )
+                        }
+                        className="w-full h-8"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Shadow Blur:
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        step="1"
+                        value={textEl.shadowBlur}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "shadowBlur",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Shadow Offset X:
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="1"
+                        value={textEl.shadowOffsetX}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "shadowOffsetX",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full"
+                      />
+                    </label>
+                    <label className="flex flex-col text-sm">
+                      Shadow Offset Y:
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        step="1"
+                        value={textEl.shadowOffsetY}
+                        onChange={(e) =>
+                          updateTextProperty(
+                            textEl.id,
+                            "shadowOffsetY",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full"
+                      />
+                    </label>
+                  </div>
                 )}
               </div>
-              {selectedTextElementId === textEl.id && (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <label className="flex flex-col text-sm">
-                    Font Size:
-                    <input
-                      type="range"
-                      min="0.01"
-                      max="0.2"
-                      step="0.005"
-                      value={textEl.fontSize}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "fontSize",
-                          parseFloat(e.target.value)
-                        )
-                      }
-                      className="w-full"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Color:
-                    <input
-                      type="color"
-                      value={textEl.color}
-                      onChange={(e) =>
-                        updateTextProperty(textEl.id, "color", e.target.value)
-                      }
-                      className="w-full h-8"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Font Family:
-                    <select
-                      value={textEl.fontFamily}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "fontFamily",
-                          e.target.value
-                        )
-                      }
-                      className="p-2 rounded-md bg-gray-600 border border-gray-500 text-white"
-                    >
-                      <option value="Impact">Impact</option>
-                      <option value="Arial">Arial</option>
-                      <option value="Verdana">Verdana</option>
-                      <option value="Times New Roman">Times New Roman</option>
-                      <option value="Courier New">Courier New</option>
-                    </select>
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Stroke Color:
-                    <input
-                      type="color"
-                      value={textEl.strokeColor}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "strokeColor",
-                          e.target.value
-                        )
-                      }
-                      className="w-full h-8"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Stroke Width:
-                    <input
-                      type="range"
-                      min="0"
-                      max="0.02"
-                      step="0.001"
-                      value={textEl.strokeWidth}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "strokeWidth",
-                          parseFloat(e.target.value)
-                        )
-                      }
-                      className="w-full"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Shadow Color:
-                    <input
-                      type="color"
-                      value={textEl.shadowColor}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "shadowColor",
-                          e.target.value
-                        )
-                      }
-                      className="w-full h-8"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Shadow Blur:
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      step="1"
-                      value={textEl.shadowBlur}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "shadowBlur",
-                          parseFloat(e.target.value)
-                        )
-                      }
-                      className="w-full"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Shadow Offset X:
-                    <input
-                      type="range"
-                      min="-20"
-                      max="20"
-                      step="1"
-                      value={textEl.shadowOffsetX}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "shadowOffsetX",
-                          parseFloat(e.target.value)
-                        )
-                      }
-                      className="w-full"
-                    />
-                  </label>
-                  <label className="flex flex-col text-sm">
-                    Shadow Offset Y:
-                    <input
-                      type="range"
-                      min="-20"
-                      max="20"
-                      step="1"
-                      value={textEl.shadowOffsetY}
-                      onChange={(e) =>
-                        updateTextProperty(
-                          textEl.id,
-                          "shadowOffsetY",
-                          parseFloat(e.target.value)
-                        )
-                      }
-                      className="w-full"
-                    />
-                  </label>
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
 
-          <div className="flex gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
             <button
               onClick={downloadMeme}
-              className="flex-1 md:px-6 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+              className="px-4 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors text-sm md:text-base"
             >
               Download Meme
             </button>
             <button
               onClick={shareMeme}
-              className="flex-1 px-6 py-3 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              className="px-4 py-3 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-sm md:text-base"
             >
               Share Meme
             </button>
@@ -542,15 +1013,3 @@ export default function MemeEditor() {
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-
-      
-         
