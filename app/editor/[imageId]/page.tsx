@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { useUser } from "../../contexts/UserContext";
 
 interface TextElement {
   id: string;
@@ -43,6 +44,7 @@ interface OverlayImage {
 export default function MemeEditor() {
   const pathname = usePathname();
   const imageSrc = decodeURIComponent(pathname.split("/").pop() || "");
+  const { isPremium } = useUser();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -186,6 +188,33 @@ export default function MemeEditor() {
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     });
+
+    // Draw watermark (only for free users)
+    if (!isPremium) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.lineWidth = canvas.width * 0.001;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+
+      // Calculate font size based on canvas size (smaller than regular text)
+      const watermarkFontSize = Math.max(12, canvas.height * 0.025);
+      ctx.font = `bold ${watermarkFontSize}px Arial`;
+
+      // Position at bottom left with some padding
+      const padding = canvas.width * 0.02;
+      const xPos = padding;
+      const yPos = canvas.height - padding;
+
+      // Reset shadow for watermark
+      ctx.shadowColor = "rgba(0,0,0,0)";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      ctx.fillText("MEME-WAREHOUSE", xPos, yPos);
+      ctx.strokeText("MEME-WAREHOUSE", xPos, yPos);
+    }
   }, [
     textElements,
     isImageLoaded,
@@ -194,6 +223,7 @@ export default function MemeEditor() {
     drawColor,
     drawSize,
     overlayImages,
+    isPremium,
   ]);
 
   useEffect(() => {

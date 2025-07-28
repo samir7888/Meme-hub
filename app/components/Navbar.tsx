@@ -1,9 +1,11 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useUser } from "../contexts/UserContext";
 
 const Navbar = () => {
   const { data: session } = useSession();
+  const { isPremium } = useUser();
 
   return (
     <nav className="bg-gray-900 text-white p-4">
@@ -12,9 +14,20 @@ const Navbar = () => {
           href="/"
           className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600"
         >
-          Meme HUB
+          MEME WAREHOUSE
         </Link>
-        <div>
+        <div className="flex items-center gap-4">
+          {session && isPremium && (
+            <span className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+              ✨ Premium
+            </span>
+          )}
+          <Link
+            href="/pricing"
+            className="text-white hover:text-purple-400 font-semibold transition-colors"
+          >
+            Pricing
+          </Link>
           {session ? (
             <button
               onClick={() => signOut()}
