@@ -47,8 +47,9 @@ export default function MemeGrid() {
     <section className="flex flex-col items-start gap-6 justify-center">
       {session && (
         <Link href="/admin">
-          <button className="bg-pink-600 cursor-pointer hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+          <button className="relative text-base cursor-pointer px-4 py-2 rounded-lg border border-neutral-600">
             Upload
+            <div className="absolute inset-x-0 h-px -bottom-px bg-gradient-to-r from-transparent via-pink-500 to-transparent"></div>
           </button>
         </Link>
       )}

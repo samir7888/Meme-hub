@@ -22,12 +22,12 @@ const SearchInput = () => {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [debouncedSearch]);
   return (
-    <div className="flex items-center">
+    <div className="flex w-lg items-center">
       <input
         type="text"
         placeholder="Search"
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full mt-2 p-2 rounded-md bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+        className="w-full flex-1 mt-2 p-2 rounded-md bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
       />
     </div>
   );
