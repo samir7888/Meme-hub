@@ -5,7 +5,7 @@ import MemeGrid from "./components/MemeGrid";
 export default function Home({
   searchParams,
 }: {
-  searchParams?: { search?: string };
+  searchParams: { search?: string };
 }) {
   return (
     <main className="space-y-6 flex min-h-screen flex-col items-center p-8 bg-neutral-800 text-white">

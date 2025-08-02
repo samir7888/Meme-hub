@@ -21,11 +21,11 @@ async function fetchImages(search?: string): Promise<IImage[]> {
 }
 
 interface MemeGridProps {
-  searchParams?: { search?: string };
+  searchParams: { search?: string };
 }
 
 export default async function MemeGrid({ searchParams }: MemeGridProps) {
-  const search = searchParams?.search;
+  const search = searchParams.search;
   const images = await fetchImages(search);
 
   return <MemeGridClient images={images} />;
