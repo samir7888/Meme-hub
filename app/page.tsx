@@ -2,7 +2,11 @@ import SearchInput from "./components/SearchInput";
 import { Suspense } from "react";
 import MemeGrid from "./components/MemeGrid";
 
-export default function Home() {
+interface HomeProps {
+  searchParams: { search?: string };
+}
+
+export default function Home({ searchParams }: HomeProps) {
   return (
     <main className="space-y-6 flex min-h-screen flex-col items-center p-8 bg-neutral-800 text-white">
       <div className="my-40">
@@ -15,11 +19,11 @@ export default function Home() {
         </p>
       </div>
 
+      <SearchInput />
       <Suspense
         fallback={<p className="text-white text-center mt-8">Loading...</p>}
       >
-        <SearchInput />
-        <MemeGrid />
+        <MemeGrid searchParams={searchParams} />
       </Suspense>
     </main>
   );

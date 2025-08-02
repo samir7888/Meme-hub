@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useUser } from "../contexts/UserContext";
 
 const Navbar = () => {
-  const { data: session } = useSession();
   const { isPremium } = useUser();
 
   return (
@@ -16,33 +15,12 @@ const Navbar = () => {
         >
           MEME WAREHOUSE
         </Link>
-        <div className="flex items-center gap-4">
-          {session && isPremium && (
-            <span className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-              ✨ Premium
-            </span>
-          )}
-          <Link
-            href="/pricing"
-            className="text-white hover:text-purple-400 font-semibold transition-colors"
-          >
-            Pricing
-          </Link>
-          {session ? (
-            <button
-              onClick={() => signOut()}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Logout
-            </button>
-          ) : (
-            <Link href="/login">
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Login
-              </button>
-            </Link>
-          )}
-        </div>
+
+        {/* todo:add github link */}
+        {/* <div className="flex items-center gap-4">
+         
+          
+        </div> */}
       </div>
     </nav>
   );
