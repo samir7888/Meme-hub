@@ -599,13 +599,13 @@ export default function MemeEditor() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 bg-black text-white">
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       <h1 className="text-3xl md:text-5xl font-extrabold mb-6 md:mb-12 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
         Create Your Meme
       </h1>
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-6xl">
-        <div className="relative flex-1 bg-gray-800 rounded-lg shadow-lg p-2 md:p-4 flex items-center justify-center">
+        <div className="relative flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 md:p-4 flex items-center justify-center border border-gray-200 dark:border-gray-700">
           <img
             ref={imageRef}
             src={`${process.env.NEXT_PUBLIC_IMAGEKIT_URL}/${imageSrc}`}
@@ -630,7 +630,7 @@ export default function MemeEditor() {
           ></canvas>
         </div>
 
-        <div className="flex-1 flex flex-col gap-4 md:gap-6 bg-gray-800 rounded-lg shadow-lg p-3 md:p-6">
+        <div className="flex-1 flex flex-col gap-4 md:gap-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 md:p-6 border border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               onClick={addTextField}
@@ -657,7 +657,7 @@ export default function MemeEditor() {
           </div>
 
           {isDrawMode && (
-            <div className="p-3 md:p-4 bg-gray-700 rounded-lg">
+            <div className="p-3 md:p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
               <h3 className="text-base md:text-lg font-semibold mb-3">
                 Drawing Tools
               </h3>
@@ -707,12 +707,12 @@ export default function MemeEditor() {
           />
 
           {overlayImages.length > 0 && (
-            <div className="p-4 bg-gray-700 rounded-lg">
+            <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
               <h3 className="text-lg font-semibold mb-3">Overlay Images</h3>
               {overlayImages.map((overlayImg) => (
                 <div
                   key={overlayImg.id}
-                  className="flex flex-col gap-2 p-3 bg-gray-600 rounded-md mb-3"
+                  className="flex flex-col gap-2 p-3 bg-gray-200 dark:bg-gray-600 rounded-md mb-3 border border-gray-300 dark:border-gray-500"
                 >
                   <div className="flex items-center gap-2">
                     <img
@@ -827,7 +827,7 @@ export default function MemeEditor() {
             textElements.map((textEl) => (
               <div
                 key={textEl.id}
-                className="flex flex-col gap-2 p-3 bg-gray-700 rounded-md"
+                className="flex flex-col gap-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600"
               >
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <div className="flex gap-2">

@@ -19,6 +19,7 @@
     "imagekitio-react": "^4.3.0",
     "next": "15.3.4",
     "next-auth": "^4.24.11",
+    "next-themes": "^0.4.6",
     "pg": "^8.16.3",
     "prisma": "^6.11.1",
     "react": "^19.0.0",

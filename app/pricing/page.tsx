@@ -42,13 +42,13 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Start creating amazing memes for free, or upgrade to Premium for the
             ultimate meme-making experience
           </p>
@@ -56,7 +56,7 @@ export default function PricingPage() {
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Free Plan */}
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 relative">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 relative shadow-lg">
             <div className="text-center mb-8">
               <h3 className="text-2xl font-bold mb-2">Free</h3>
               <div className="text-4xl font-extrabold mb-2">
@@ -65,7 +65,9 @@ export default function PricingPage() {
                   /month
                 </span>
               </div>
-              <p className="text-gray-400">Perfect for casual meme creators</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                Perfect for casual meme creators
+              </p>
             </div>
 
             <ul className="space-y-4 mb-8">
@@ -82,13 +84,15 @@ export default function PricingPage() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-gray-300">{feature}</span>
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {feature}
+                  </span>
                 </li>
               ))}
             </ul>
 
             <Link href="/">
-              <button className="w-full py-3 px-6 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors">
+              <button className="w-full py-3 px-6 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold rounded-lg transition-colors">
                 Get Started Free
               </button>
             </Link>
@@ -110,7 +114,9 @@ export default function PricingPage() {
                   /month
                 </span>
               </div>
-              <p className="text-gray-300">For serious meme creators</p>
+              <p className="text-gray-600 dark:text-gray-300">
+                For serious meme creators
+              </p>
             </div>
 
             <ul className="space-y-4 mb-8">
@@ -173,43 +179,43 @@ export default function PricingPage() {
           </h2>
 
           <div className="space-y-6">
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-md">
               <h3 className="text-xl font-semibold mb-3">
                 Can I cancel my subscription anytime?
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300">
                 Yes! You can cancel your Premium subscription at any time.
                 You'll continue to have access to Premium features until the end
                 of your billing period.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-md">
               <h3 className="text-xl font-semibold mb-3">
                 What happens to my memes if I downgrade?
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300">
                 All your previously created memes will remain accessible.
                 However, new memes will include the watermark and you'll lose
                 access to Premium features.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-md">
               <h3 className="text-xl font-semibold mb-3">
                 Do you offer refunds?
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300">
                 We offer a 7-day money-back guarantee. If you're not satisfied
                 with Premium, contact us within 7 days for a full refund.
               </p>
             </div>
 
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-md">
               <h3 className="text-xl font-semibold mb-3">
                 Is my payment information secure?
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-600 dark:text-gray-300">
                 Absolutely! We use Stripe for payment processing, which is
                 trusted by millions of businesses worldwide. We never store your
                 payment information on our servers.
@@ -224,13 +230,13 @@ export default function PricingPage() {
             <h2 className="text-3xl font-bold mb-4">
               Ready to Create Amazing Memes?
             </h2>
-            <p className="text-xl text-gray-300 mb-8">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
               Join thousands of creators who are already making viral memes with
               MEME WAREHOUSE
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/">
-                <button className="px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+                <button className="px-8 py-3 bg-white dark:bg-gray-800 text-black dark:text-white font-semibold rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600">
                   Start Creating Free
                 </button>
               </Link>
