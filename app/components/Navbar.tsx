@@ -69,7 +69,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+    <nav className="bg-white w-full fixed z-30 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link
           href="/"
