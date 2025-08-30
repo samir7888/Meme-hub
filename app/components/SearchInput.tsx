@@ -27,7 +27,7 @@ const SearchInput = () => {
         type="text"
         placeholder="Search"
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full flex-1 mt-2 p-2 rounded-md bg-gray-200 dark:bg-neutral-600 border border-gray-300  focus:outline-none focus:ring-2 focus:ring-purple-500 text-black dark:text-neutral-50"
+        className="w-full flex-1 mt-2 p-2 rounded-md bg-gray-200 dark:bg-neutral-700 border border-gray-300  focus:outline-none focus:ring-2 focus:ring-neutral-200 text-black dark:text-neutral-50 dark:border-neutral-800"
       />
     </div>
   );

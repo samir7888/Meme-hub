@@ -15,15 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-title: "Meme - Create and Share Your Memories",
-  description: "A modern platform to create, organize, and share your precious memories with beautiful layouts and intuitive design.",
+  title: "Meme - Create and Share Your Memories",
+  description:
+    "A modern platform to create, organize, and share your precious memories with beautiful layouts and intuitive design.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body

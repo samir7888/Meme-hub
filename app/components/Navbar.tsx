@@ -58,7 +58,7 @@ const Navbar = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link
             href="/"
-            className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600"
+            className="text-2xl font-bold text-white dark:text-black"
           >
             MEME WAREHOUSE
           </Link>
@@ -73,7 +73,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link
           href="/"
-          className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600"
+          className="text-2xl font-bold text-black dark:text-white"
         >
           MEME WAREHOUSE
         </Link>
